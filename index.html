@@ -1,1 +1,108 @@
-echo "hello there"
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
+
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Windows.Forms;
+
+public class UIUtils {
+    [DllImport("user32.dll")]
+    public static extern bool SetProcessDPIAware();
+
+    [DllImport("kernel32.dll")]
+    public static extern IntPtr GetConsoleWindow();
+
+    [DllImport("user32.dll")]
+    public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    public static void RoundControl(Control control, int radius) {
+        GraphicsPath path = new GraphicsPath();
+        path.AddArc(0, 0, radius, radius, 180, 90);
+        path.AddArc(control.Width - radius, 0, radius, radius, 270, 90);
+        path.AddArc(control.Width - radius, control.Height - radius, radius, radius, 0, 90);
+        path.AddArc(0, control.Height - radius, radius, radius, 90, 90);
+        path.CloseAllFigures();
+        control.Region = new Region(path);
+    }
+}
+"@ -ReferencedAssemblies "System.Windows.Forms", "System.Drawing"
+
+[UIUtils]::ShowWindow([UIUtils]::GetConsoleWindow(), 0) | Out-Null
+[UIUtils]::SetProcessDPIAware() | Out-Null
+
+$appList = @(
+    [PSCustomObject]@{ Name = "Ms Store Bypass"; URL = "https://raw.githubusercontent.com/n00oob/n00oob.github.io/refs/heads/main/Apps/MsStore-Bypass.ps1" }
+)
+
+$form = New-Object System.Windows.Forms.Form
+$form.Size = New-Object System.Drawing.Size(400, (140 + ($appList.Count * 75)))
+$form.BackColor = [System.Drawing.Color]::FromArgb(32, 33, 36)
+$form.FormBorderStyle = "None"
+$form.StartPosition = "CenterScreen"
+$form.TopMost = $true
+$form.add_Load({ [UIUtils]::RoundControl($form, 20) })
+
+$titleBar = New-Object System.Windows.Forms.Panel
+$titleBar.Size = New-Object System.Drawing.Size(400, 40)
+$titleBar.Dock = "Top"
+$titleBar.BackColor = [System.Drawing.Color]::FromArgb(40, 41, 44)
+
+$titleText = New-Object System.Windows.Forms.Label
+$titleText.Text = "System Toolkit"
+$titleText.ForeColor = [System.Drawing.Color]::FromArgb(200, 200, 200)
+$titleText.Font = New-Object System.Drawing.Font("Segoe UI", 9, [System.Drawing.FontStyle]::Bold)
+$titleText.Location = New-Object System.Drawing.Point(15, 12)
+$titleText.AutoSize = $true
+$titleBar.Controls.Add($titleText)
+
+$closeBtn = New-Object System.Windows.Forms.Button
+$closeBtn.Text = "r"; $closeBtn.Size = New-Object System.Drawing.Size(40, 40); $closeBtn.Location = New-Object System.Drawing.Point(360, 0)
+$closeBtn.FlatStyle = "Flat"; $closeBtn.FlatAppearance.BorderSize = 0; $closeBtn.Font = New-Object System.Drawing.Font("Marlett", 9); $closeBtn.ForeColor = [System.Drawing.Color]::White
+$closeBtn.add_Click({ $form.Close() })
+$titleBar.Controls.Add($closeBtn)
+$form.Controls.Add($titleBar)
+
+$titleBar.add_MouseDown({ $script:drag = $true; $script:pos = [System.Windows.Forms.Cursor]::Position; $script:fpos = $form.Location })
+$titleBar.add_MouseMove({ if ($script:drag) { $form.Location = [System.Drawing.Point]::Add($script:fpos, [System.Drawing.Point]::Subtract([System.Windows.Forms.Cursor]::Position, $script:pos)) } })
+$titleBar.add_MouseUp({ $script:drag = $false })
+
+$header = New-Object System.Windows.Forms.Label
+$header.Text = "Quick Actions"
+$header.Font = New-Object System.Drawing.Font("Segoe UI", 18, [System.Drawing.FontStyle]::Bold)
+$header.ForeColor = [System.Drawing.Color]::White
+$header.Size = New-Object System.Drawing.Size(400, 60); $header.Location = New-Object System.Drawing.Point(0, 55); $header.TextAlign = "MiddleCenter"
+$form.Controls.Add($header)
+
+$y = 120
+foreach ($app in $appList) {
+    $btn = New-Object System.Windows.Forms.Button
+    $btn.Text = $app.Name
+    $btn.Size = New-Object System.Drawing.Size(320, 55)
+    $btn.Location = New-Object System.Drawing.Point(40, $y)
+    $btn.FlatStyle = "Flat"
+    $btn.FlatAppearance.BorderSize = 0
+    $btn.BackColor = [System.Drawing.Color]::FromArgb(50, 51, 55)
+    $btn.ForeColor = [System.Drawing.Color]::White
+    $btn.Font = New-Object System.Drawing.Font("Segoe UI", 10, [System.Drawing.FontStyle]::Bold)
+    $btn.Cursor = [System.Windows.Forms.Cursors]::Hand
+    
+    $targetUrl = $app.URL
+
+    $btn.add_Click({
+        $form.Hide()
+        iex (iwr -useb $targetUrl)
+        $form.Close()
+    })
+
+    $btn.add_Paint({ [UIUtils]::RoundControl($this, 12) })
+    $btn.add_MouseEnter({ $this.BackColor = [System.Drawing.Color]::FromArgb(66, 133, 244) })
+    $btn.add_MouseLeave({ $this.BackColor = [System.Drawing.Color]::FromArgb(50, 51, 55) })
+
+    $form.Controls.Add($btn)
+    $y += 70
+}
+
+$form.ShowDialog()
