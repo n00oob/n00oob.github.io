@@ -94,9 +94,9 @@ foreach ($app in $appList) {
 
     $btn.add_Click({
         $form.Hide()
-        iex (iwr -useb $targetUrl)
+        Invoke-Expression (Invoke-WebRequest -UseBasicParsing -Uri $targetUrl)
         $form.Close()
-    })
+    }.GetNewClosure())
 
     $btn.add_Paint({ [UIUtils]::RoundControl($this, 12) })
     $btn.add_MouseEnter({ $this.BackColor = [System.Drawing.Color]::FromArgb(66, 133, 244) })
